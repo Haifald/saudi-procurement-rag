@@ -1,0 +1,6 @@
+.env
+__pycache__/
+*.py[cod]
+eval_results.csv
+ragas_results*.csv
+scripts/
