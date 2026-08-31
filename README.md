@@ -204,13 +204,27 @@ npm run dev
 
 For local development, set `BACKEND_URL=http://localhost:8000` in `frontend/.env.local`. Open the URL printed by Next.js, typically `http://localhost:3000`.
 
-### Rebuilding the Index
+### Source Document and Index
 
-The generated FAISS index is intentionally ignored by Git. After replacing `backend/data/mapping.pdf`, run the following from `backend/` with the Python environment active:
+The source document and generated FAISS index are not included in this repository.
+
+Download the source document from the official Saudi Ministry of Finance website:
+
+[Saudi Government Tenders and Procurement Law and Executive Regulations — Ministry of Finance](https://www.mof.gov.sa/Knowledgecenter/newGovTendandProcLow/Documents/GovT2026.pdf)
+
+Save the downloaded file as:
+
+```text
+backend/data/mapping.pdf
+```
+
+Then rebuild the local FAISS index from `backend/` with the Python environment active:
 
 ```bash
 python scripts/rebuild_index.py
 ```
+
+The generated FAISS index is stored in `backend/embeddings/` and is ignored by Git.
 
 ### Docker Compose
 
