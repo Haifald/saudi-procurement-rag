@@ -72,11 +72,11 @@ flowchart TB
     Metadata["Metadata Extraction"]
     Embed["Embedding Generation"]
     Index["FAISS Index"]
-    OCR["Conditional OCR Repair"]
+    OCR["Page-Level OCR Attempt"]
 
     PDF --> Extract --> Process --> Metadata --> Embed --> Index
-    Process -. "validated missing numeric references" .-> OCR
-    OCR -. "constrained repair" .-> Metadata
+    Process -. "during page processing" .-> OCR
+    OCR -. "apply unique numeric-reference matches only" .-> Metadata
 ```
 
 The ingestion pipeline reconstructs positioned Arabic PDF text into article-level documents, preserves regulatory metadata, and writes embeddings to a local FAISS index.
@@ -106,7 +106,7 @@ At runtime, the Next.js application proxies questions to FastAPI. The backend ro
 
 ### Retrieval Routing and Metadata
 
-The application does not force every request through vector similarity search. For an explicit article reference, `article_search()` resolves the article directly from `ARTICLE_INDEX`, which is built from FAISS document-store metadata. `hybrid_search()` then adds semantic results as supporting context before generation.
+The application does not force every request through vector similarity search. For an explicit article reference, `article_search()` resolves the article through `get_article_index()`, which lazily builds the private `_article_index` from FAISS document-store metadata. `hybrid_search()` then adds semantic results as supporting context before generation.
 
 For a natural-language question where the relevant article is unknown, `semantic_search()` embeds the question with the `query:` prefix required by `intfloat/multilingual-e5-large` and queries FAISS for relevant provisions.
 
@@ -116,7 +116,7 @@ Each indexed document carries its source type, article number, chapter (`bab`), 
 
 The source PDF uses Arabic right-to-left text and parallel document columns. `pdfplumber` word coordinates are reconstructed into logical lines before article processing to better preserve article boundaries that may be lost during linear text extraction.
 
-Tesseract OCR is used only as a constrained repair path for validated missing numeric references; it does not replace article text indiscriminately.
+During page processing, the pipeline attempts Arabic Tesseract OCR for each PDF page. OCR output is applied only when it uniquely fills an empty parenthesized numeric reference in the corresponding extracted article text; otherwise, the PDF-extracted content is retained.
 
 ### Source-Grounded Generation
 
