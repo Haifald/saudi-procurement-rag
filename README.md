@@ -174,7 +174,7 @@ docker-compose.yml
 
 - Python 3.12 or a compatible version
 - Node.js compatible with Next.js 15
-- An OpenAI API key for the backend
+- An OpenAI API key for full question answering
 - Tesseract with Arabic language data when rebuilding the FAISS index
 
 ### Backend
@@ -185,24 +185,17 @@ From `backend/`:
 python -m venv .venv
 # Activate the virtual environment for your shell.
 python -m pip install -r requirements.txt
-cp .env.example .env
-python -m uvicorn app.api:app --host 127.0.0.1 --port 8000
 ```
 
-Set `OPENAI_API_KEY` in `backend/.env`. On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Keep `.env` local; it is ignored by Git.
+### Health Smoke Test
 
-### Frontend
-
-In a second terminal:
+From `backend/`, with the Python environment active:
 
 ```bash
-cd frontend
-cp .env.example .env.local
-npm ci
-npm run dev
+python -m pytest -q tests/test_health.py
 ```
 
-For local development, set `BACKEND_URL=http://localhost:8000` in `frontend/.env.local`. Open the URL printed by Next.js, typically `http://localhost:3000`.
+This verifies that `/health` responds without requiring the FAISS index or an OpenAI API key.
 
 ### Source Document and Index
 
@@ -225,6 +218,34 @@ python scripts/rebuild_index.py
 ```
 
 The generated FAISS index is stored in `backend/embeddings/` and is ignored by Git.
+
+### Run the Backend
+
+From `backend/`, with the Python environment active, copy the environment file:
+
+```bash
+cp .env.example .env
+```
+
+Set `OPENAI_API_KEY` in `backend/.env`. On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`. Keep `.env` local; it is ignored by Git.
+
+Then start the backend:
+
+```bash
+python -m uvicorn app.api:app --host 127.0.0.1 --port 8000
+```
+### Frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+cp .env.example .env.local
+npm ci
+npm run dev
+```
+
+For local development, set `BACKEND_URL=http://localhost:8000` in `frontend/.env.local`. Open the URL printed by Next.js, typically `http://localhost:3000`.
 
 ### Docker Compose
 
